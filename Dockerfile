@@ -42,17 +42,12 @@ RUN \
 &&  ln -s /phantomjs/phantomjs-2.0.0/bin/phantomjs /usr/local/bin/phantomjs \
 &&  ln -s /phantomjs/phantomjs-2.0.0/bin/phantomjs /usr/bin/phantomjs \
     # Removing build dependencies, clean temporary files
-&&  apt-get purge -yqq ${buildDependencies} \
-&&  apt-get autoremove -yqq \
-&&  apt-get clean \
-&&  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+#&&  apt-get purge -yqq ${buildDependencies} \
+#&&  apt-get autoremove -yqq \
+#&&  apt-get clean \
+#&&  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     # Checking if phantom works
 &&  phantomjs -v
-
-CMD \
-    echo "phantomjs binary is located at /phantomjs/phantomjs-2.0.0/bin/phantomjs"\
-&&  echo "just run 'phantomjs' (version `phantomjs -v`)"
-
 
 ENV JENKINS_HOME /var/jenkins_home
 ENV JENKINS_SLAVE_AGENT_PORT 50000
