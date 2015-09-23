@@ -9,7 +9,50 @@ RUN gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A170311380
 RUN curl -sSL https://get.rvm.io | bash -s stable
 RUN /bin/bash -l -c "rvm requirements"
 RUN /bin/bash -l -c "rvm install 2.2.3"
+RUN /bin/bash -l -c "rvm use 2.2.3 --default"
 RUN /bin/bash -l -c "gem install bundler --no-ri --no-rdoc"
+
+# Dependencies we just need for building phantomjs
+ENV buildDependencies\
+  wget unzip python build-essential g++ flex bison gperf\
+  ruby perl libsqlite3-dev libssl-dev libpng-dev
+
+# Dependencies we need for running phantomjs
+ENV phantomJSDependencies\
+  libicu-dev libfontconfig1-dev libjpeg-dev libfreetype6 openssl
+
+# Installing phantomjs
+RUN \
+    # Installing dependencies
+    apt-get update -yqq \
+&&  apt-get install -fyqq ${buildDependencies} ${phantomJSDependencies}\
+    # Downloading src, unzipping & removing zip
+&&  mkdir phantomjs \
+&&  cd phantomjs \
+&&  wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.0.0-source.zip \
+&&  unzip phantomjs-2.0.0-source.zip \
+&&  rm -rf /phantomjs/phantomjs-2.0.0-source.zip \
+    # Building phantom
+&&  cd phantomjs-2.0.0/ \
+&&  ./build.sh --jobs 1 --confirm --silent \
+    # Removing everything but the binary
+&&  ls -A | grep -v bin | xargs rm -rf \
+    # Symlink phantom so that we are able to run `phantomjs`
+&&  ln -s /phantomjs/phantomjs-2.0.0/bin/phantomjs /usr/local/share/phantomjs \
+&&  ln -s /phantomjs/phantomjs-2.0.0/bin/phantomjs /usr/local/bin/phantomjs \
+&&  ln -s /phantomjs/phantomjs-2.0.0/bin/phantomjs /usr/bin/phantomjs \
+    # Removing build dependencies, clean temporary files
+&&  apt-get purge -yqq ${buildDependencies} \
+&&  apt-get autoremove -yqq \
+&&  apt-get clean \
+&&  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    # Checking if phantom works
+&&  phantomjs -v
+
+CMD \
+    echo "phantomjs binary is located at /phantomjs/phantomjs-2.0.0/bin/phantomjs"\
+&&  echo "just run 'phantomjs' (version `phantomjs -v`)"
+
 
 ENV JENKINS_HOME /var/jenkins_home
 ENV JENKINS_SLAVE_AGENT_PORT 50000
@@ -62,3 +105,5 @@ ENTRYPOINT ["/bin/tini", "--", "/usr/local/bin/jenkins.sh"]
 
 # from a derived Dockerfile, can use `RUN plugin.sh active.txt` to setup /usr/share/jenkins/ref/plugins from a support bundle
 COPY plugins.sh /usr/local/bin/plugins.sh
+COPY plugins.txt /plugins.txt
+RUN /usr/local/bin/plugins.sh /plugins.txt
