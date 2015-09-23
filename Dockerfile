@@ -34,7 +34,7 @@ RUN \
 &&  rm -rf /phantomjs/phantomjs-2.0.0-source.zip \
     # Building phantom
 &&  cd phantomjs-2.0.0/ \
-&&  ./build.sh --jobs 1 --confirm --silent \
+&&  ./build.sh --jobs 4 --confirm --silent \
     # Removing everything but the binary
 &&  ls -A | grep -v bin | xargs rm -rf \
     # Symlink phantom so that we are able to run `phantomjs`
