@@ -1,9 +1,32 @@
-master:
+phantomjs2:
+  image: "rosenhouse/phantomjs2:latest"
+
+mongodb:
+  image: "mongo:3"
+
+redis:
+  image: "redis:3"
+
+postgres:
+  image: "postgres:9"
+
+memcached:
+  image: "memcached"
+
+jenkins:
   build: .
+  container_name: "cti_jenkins"
   environment:
-    JAVA_OPTS: "-Djava.awt.headless=true"
+    JAVA_OPTS: "-Djava.awt.headless=true -Djava.util.logging.config.file=/var/jenkins_home/log.properties"
   ports:
     - "50000:50000"
     - "8080:8080"
   volumes:
-    - /var/jenkins_home
+    - /home/jenkins:/var/jenkins_home
+  restart: always
+  user: jenkins
+  links:
+    - mongodb
+    - redis
+    - postgres
+    - memcached
